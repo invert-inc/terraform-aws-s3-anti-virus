@@ -138,6 +138,11 @@ resource "aws_s3_bucket_notification" "main_scan" {
     lambda_function_arn = aws_lambda_function.main_scan.arn
     events              = ["s3:ObjectCreated:*"]
   }
+depends_on = [
+  aws_lambda_permission.main_scan,
+  aws_lambda_function.main_scan
+  ]
+  
 }
 
 #
