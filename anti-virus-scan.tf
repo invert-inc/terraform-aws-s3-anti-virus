@@ -79,16 +79,21 @@ data "aws_iam_policy_document" "main_scan" {
     ]
   }
 
-  statement {
-    sid = "kmsDecrypt"
+  dynamic "statement" {
+    for_each = var.kms_key_sns_arn != "" ? [1] : []
+    content {
+      sid = "kmsGenerateDataKey"
 
-    effect = "Allow"
+      effect = "Allow"
 
-    actions = [
-      "kms:Decrypt",
-    ]
+      actions = [
+        "kms:GenerateDataKey",
+      ]
 
-    resources = formatlist("%s/*", data.aws_s3_bucket.main_scan.*.arn)
+      resources = [
+        var.kms_key_sns_arn
+      ]
+    }
   }
 
   dynamic "statement" {
@@ -178,7 +183,7 @@ resource "aws_lambda_function" "main_scan" {
   function_name = var.name_scan
   role          = aws_iam_role.main_scan.arn
   handler       = "scan.lambda_handler"
-  runtime       = "python3.7"
+  runtime       = "python3.9"
   memory_size   = var.memory_size
   timeout       = var.timeout_seconds
 
